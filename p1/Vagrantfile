@@ -1,0 +1,71 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+MASTER_IP = "192.168.56.110"
+WORKER_IP = "192.168.56.111"
+MASTER_NAME = "dtentacoS"
+WORKER_NAME = "dtentacoSW"
+
+#############################################################################
+########             1.  ROOT VM CONFIG IN VAGRANTFILE            ###########
+#############################################################################
+Vagrant.configure("2") do |config|
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "centos/7"
+
+#############################################################################
+########              1.1 FIRST VM CONFIG IN ROOT                 ###########
+#############################################################################
+  config.vm.define "dtentacoS" do |server|
+    # Create a private network, which allows host-only access to the machine
+    # using a specific IP.
+    server.vm.network "private_network", ip: MASTER_IP
+    server.vm.hostname = MASTER_NAME
+
+    server.vm.provider "virtualbox" do |vbS|
+#   # Customize the amount of memory on the VM:
+      vbS.memory = "1024"
+#   # Customize the amount of CPU on the VM:
+      vbS.cpus = 1
+    end
+
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+    server.vm.provision "shell", inline: <<-SHELL
+      curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--flannel-iface eth1" sh -s -
+      echo $(sudo cat /var/lib/rancher/k3s/server/node-token) > /vagrant/.token
+      sudo yum install net-tools -y
+    SHELL
+
+  # Enable trigger after "up" command.
+    server.trigger.after :up do |trigger|
+      trigger.run = {inline: "vagrant scp dtentacoS:/vagrant/.token ."}
+    end
+  end
+
+#############################################################################
+########            1.2 SECOND VM CONFIG IN ROOT                  ###########
+#############################################################################
+  config.vm.define "dtentacoSW" do |worker|
+    # Create a private network, which allows host-only access to the machine
+    # using a specific IP.
+    worker.vm.network "private_network", ip: WORKER_IP
+    worker.vm.hostname = WORKER_NAME
+    worker.vm.provider "virtualbox" do |vbSW|
+#   # Customize the amount of memory on the VM:
+      vbSW.memory = "1024"
+#   # Customize the amount of CPU on the VM:
+      vbSW.cpus = 1
+    end
+    worker.vm.provision "shell", args: [MASTER_IP], inline: <<-SHELL
+      curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" K3S_URL=https://$1:6443 K3S_TOKEN=$(cat /vagrant/.token) INSTALL_K3S_EXEC="--flannel-iface eth1" sh -s -
+      sudo yum install net-tools -y
+    SHELL
+    worker.trigger.after :up do |trigger|
+      trigger.run = {inline: "rm .token"}
+    end
+  end
+end

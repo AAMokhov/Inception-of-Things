@@ -1,0 +1,43 @@
+# ------------------------------------------------ #
+#                 Service "app3.com"               #
+# ------------------------------------------------ #
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-3
+  labels:
+    app: app-3
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: app-3
+  type: NodePort
+---
+# ------------------------------------------------ #
+#              Deployment "app3.com"               #
+# ------------------------------------------------ #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-3
+  labels:
+    app: app-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-3
+  template:
+    metadata:
+      labels:
+        app: app-3
+    spec:
+      containers:
+      - name: app-3
+        image: paulbouwer/hello-kubernetes:1.10
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MESSAGE
+          value: "Hello from app-three."

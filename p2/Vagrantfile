@@ -1,0 +1,29 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+MASTER_IP = "192.168.56.110"
+MASTER_NAME = "dtentacoS"
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/7"
+
+  config.vm.define "dtentacoS" do |server|
+    # Create a private network, which allows host-only access to the machine
+    # using a specific IP.
+    server.vm.network "private_network", ip: MASTER_IP
+    server.vm.hostname = MASTER_NAME
+    server.vm.synced_folder ".", "/vagrant"
+
+    server.vm.provider "virtualbox" do |vbS|
+#   # Customize the amount of memory on the VM:
+      vbS.memory = "3072"
+      vbS.name = MASTER_NAME
+    end
+  end
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  config.vm.provision "shell", privileged: false, path: "./scripts/setup.sh"
+
+end
