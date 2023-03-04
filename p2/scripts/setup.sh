@@ -8,7 +8,7 @@ curl -sfL https://get.k3s.io | sh -s -
 sudo yum install net-tools -y
 
 #install apps in claster k3s
-kubectl apply -f /vagrant/manifests/
+kubectl apply -f /vagrant/confs/
 
 sleep 10
 echo "[INFO]  Successfully installed k3s on server node and all deployments!"
