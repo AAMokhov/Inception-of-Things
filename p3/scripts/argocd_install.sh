@@ -18,7 +18,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 while [[ $(kubectl get pods -n argocd -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True True True True True True True" ]]; \
  do echo "[INFO][ARGOCD]  Waiting all pods to be ready..." && sleep 10; done
 
-kubectl apply -f /vagrant/scripts/deployement.yaml 
+kubectl apply -f /vagrant/confs/deployement.yaml 
 
 while [[ $(kubectl get pods -n dev -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; \
  do echo "[INFO][DEV]  Waiting all pods to be ready..." && sleep 10; done
